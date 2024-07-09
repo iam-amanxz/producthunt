@@ -1,6 +1,6 @@
 name: producthunt
 publish_to: 'none'
-version: 0.2.0
+version: 1.0.0
 
 environment:
   sdk: '>=3.4.3 <4.0.0'

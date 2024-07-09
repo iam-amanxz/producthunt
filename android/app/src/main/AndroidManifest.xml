@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     
     <application
-        android:label="producthunt"
+        android:label="ProductHunt"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
