@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/error/exception.dart';
 import '../models/product_model.dart';
@@ -160,7 +162,15 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         throw const ServerException("No products to export");
       }
 
-      final jsonData = products.map((product) => product.toMap()).toList();
+      final jsonData = products.map((product) {
+        final imageBytes = File(product.imageUrl).readAsBytesSync();
+        final base64Image = base64Encode(imageBytes);
+
+        return {
+          ...product.toMap(),
+          "base64Image": base64Image,
+        };
+      }).toList();
 
       await FilePicker.platform.saveFile(
         dialogTitle: "Export Products",
@@ -188,14 +198,30 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     String fileContent = await file.readAsString();
     final importedJsonData = jsonDecode(fileContent);
 
-    List<ProductModel> importedProducts = importedJsonData
-        .map<ProductModel>((product) => ProductModel.fromMap(product))
-        .toList();
+    List<ProductModel> importedProducts = [];
+
+    for (final product in importedJsonData) {
+      final base64Image = product["base64Image"];
+      final imageBytes = base64Decode(base64Image);
+
+      final XFile imageFile = XFile.fromData(imageBytes);
+
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/${DateTime.now()}.png';
+
+      await imageFile.saveTo(path);
+
+      importedProducts.add(
+        ProductModel.fromMap(product).copyWith(
+          imageUrl: path,
+        ),
+      );
+    }
 
     box.clear();
 
-    for (ProductModel product in importedProducts) {
-      box.put(product.id, product.toMap());
+    for (final product in importedProducts) {
+      await create(product);
     }
   }
 }

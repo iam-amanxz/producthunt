@@ -18,6 +18,9 @@ feature:
 	mkdir -p lib/features/$(feature)/presentation/pages
 	mkdir -p lib/features/$(feature)/presentation/widgets
 
+icon:
+	flutter pub run flutter_launcher_icons
+
 release:
 	flutter build apk --release
 	flutter devices
